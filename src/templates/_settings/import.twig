@@ -1,0 +1,75 @@
+{% extends "_layouts/cp" %}
+{% set title = "WordPress Import" %}
+
+{% block content %}
+    <h1>{{ "Import from WordPress"|t('wp-importer') }}</h1>
+    
+    <p>{{ "Export your posts from WordPress via WP Admin > Tools > Export and upload the XML file below."|t('wp-importer') }}</p>
+    
+    <div class="alert">
+        <strong>{{ "What will be imported:"|t('wp-importer') }}</strong>
+        <ul>
+            <li>{{ "Posts and pages"|t('wp-importer') }}</li>
+            <li>{{ "Categories and tags"|t('wp-importer') }}</li>
+            <li>{{ "Authors"|t('wp-importer') }}</li>
+            <li>{{ "Images and attachments"|t('wp-importer') }}</li>
+            <li>{{ "Content formatting"|t('wp-importer') }}</li>
+        </ul>
+    </div>
+
+    <form method="post" accept-charset="UTF-8" enctype="multipart/form-data" action="{{ actionUrl('wp-importer/import/confirm') }}">
+        {{ csrfInput() }}
+
+        <div class="field">
+            <div class="heading">
+                <label for="file">{{ "WordPress XML Export File"|t('wp-importer') }}</label>
+                <div class="instructions">
+                    <p>{{ "Select the XML file exported from your WordPress site."|t('wp-importer') }}</p>
+                </div>
+            </div>
+            <div class="input">
+                <input type="file" id="file" name="file" accept=".xml" required>
+            </div>
+        </div>
+
+        <div class="field">
+            <div class="heading">
+                <label for="asset-volume">{{ "Asset Volume"|t('wp-importer') }}</label>
+                <div class="instructions">
+                    <p>{{ "Choose where to store imported images and attachments."|t('wp-importer') }}</p>
+                </div>
+            </div>
+            <div class="input">
+                {{ forms.selectField({
+                    id: 'asset-volume',
+                    name: 'import[assetVolumeId]',
+                    options: volumeOptions,
+                    value: '',
+                    required: true
+                }) }}
+            </div>
+        </div>
+
+        <div class="field">
+            {{ forms.checkboxField({
+                id: 'backup',
+                name: 'import[backup]',
+                label: "Create backup before import"|t('wp-importer'),
+                instructions: "Recommended: Create a database backup before importing content."|t('wp-importer'),
+                checked: true
+            }) }}
+        </div>
+
+        <div class="buttons">
+            <button type="submit" class="btn submit">{{ "Upload and Preview"|t('wp-importer') }}</button>
+        </div>
+    </form>
+
+    {% if craft.app.request.getParam('job') %}
+        <div class="alert success">
+            <p>{{ "Import job is running. You can monitor progress in the queue."|t('wp-importer') }}</p>
+            <a href="{{ cpUrl('utilities/queue-manager') }}" class="btn">{{ "View Queue"|t('wp-importer') }}</a>
+        </div>
+    {% endif %}
+
+{% endblock %}

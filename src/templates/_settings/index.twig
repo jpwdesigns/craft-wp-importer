@@ -1,0 +1,123 @@
+{% extends "_layouts/cp" %}
+{% set title = "WP Importer Settings" %}
+
+{% block content %}
+    <form method="post" accept-charset="UTF-8">
+        {{ csrfInput() }}
+        {{ actionInput('wp-importer/settings/save-settings') }}
+        {{ redirectInput('wp-importer/settings') }}
+
+        <div class="field">
+            <div class="heading">
+                <label for="settings-layout">{{ "Blog Layout Template"|t('wp-importer') }}</label>
+                <div class="instructions">
+                    <p>{{ "Specify a custom layout template for your blog templates to extend. Leave blank to use the default."|t('wp-importer') }}</p>
+                </div>
+            </div>
+            <div class="input">
+                {{ forms.textField({
+                    id: 'settings-layout',
+                    name: 'settings[layout]',
+                    value: settings.layout,
+                    placeholder: '_layouts/site'
+                }) }}
+            </div>
+        </div>
+
+        <hr>
+
+        <h2>{{ "Social Settings"|t('wp-importer') }}</h2>
+        <p>{{ "These settings are used for OpenGraph meta tags and social sharing. Individual authors can override these in their user profiles."|t('wp-importer') }}</p>
+
+        <div class="field">
+            <div class="heading">
+                <label for="settings-facebook">{{ "Facebook Profile URL"|t('wp-importer') }}</label>
+            </div>
+            <div class="input">
+                {{ forms.textField({
+                    id: 'settings-facebook',
+                    name: 'settings[facebook]',
+                    value: settings.facebook,
+                    placeholder: 'https://www.facebook.com/username'
+                }) }}
+            </div>
+        </div>
+
+        <div class="field">
+            <div class="heading">
+                <label for="settings-twitter">{{ "Twitter Handle"|t('wp-importer') }}</label>
+            </div>
+            <div class="input">
+                {{ forms.textField({
+                    id: 'settings-twitter',
+                    name: 'settings[twitter]',
+                    value: settings.twitter,
+                    placeholder: '@username'
+                }) }}
+            </div>
+        </div>
+
+        <div class="field">
+            <div class="heading">
+                <label for="settings-linkedin">{{ "LinkedIn Profile URL"|t('wp-importer') }}</label>
+            </div>
+            <div class="input">
+                {{ forms.textField({
+                    id: 'settings-linkedin',
+                    name: 'settings[linkedin]',
+                    value: settings.linkedin,
+                    placeholder: 'https://www.linkedin.com/in/username'
+                }) }}
+            </div>
+        </div>
+
+        <div class="field">
+            <div class="heading">
+                <label for="settings-googleplus">{{ "Google+ Profile URL"|t('wp-importer') }}</label>
+                <div class="instructions">
+                    <p>{{ "Note: Google+ is no longer active, but this field is maintained for legacy compatibility."|t('wp-importer') }}</p>
+                </div>
+            </div>
+            <div class="input">
+                {{ forms.textField({
+                    id: 'settings-googleplus',
+                    name: 'settings[googlePlus]',
+                    value: settings.googlePlus,
+                    placeholder: 'https://plus.google.com/+username'
+                }) }}
+            </div>
+        </div>
+
+        <hr>
+
+        <h2>{{ "Disqus Settings"|t('wp-importer') }}</h2>
+        <p>{{ "InstaBlog uses Disqus for comments. Create a Disqus account and enter your shortname to enable comments."|t('wp-importer') }}</p>
+
+        <div class="field">
+            <div class="heading">
+                <label for="settings-disqus">{{ "Disqus Shortname"|t('wp-importer') }}</label>
+            </div>
+            <div class="input">
+                {{ forms.textField({
+                    id: 'settings-disqus',
+                    name: 'settings[disqus]',
+                    value: settings.disqus,
+                    placeholder: 'your-disqus-shortname'
+                }) }}
+            </div>
+        </div>
+
+        <div class="buttons">
+            <button type="submit" class="btn submit">{{ "Save"|t('wp-importer') }}</button>
+        </div>
+    </form>
+
+    <hr>
+
+    <h2>{{ "WordPress Import"|t('wp-importer') }}</h2>
+    <p>{{ "Import posts, categories, tags, authors, and images from a WordPress XML export file."|t('wp-importer') }}</p>
+    
+    <div class="buttons">
+        <a href="{{ cpUrl('wp-importer/settings/import') }}" class="btn">{{ "Import from WordPress"|t('wp-importer') }}</a>
+    </div>
+{% endblock %}

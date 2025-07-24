@@ -1,0 +1,99 @@
+{% extends "_layouts/cp" %}
+{% set title = "Confirm Import" %}
+
+{% block content %}
+    <h1>{{ "Confirm WordPress Import"|t('wp-importer') }}</h1>
+    
+    <p>{{ "Review the content found in your WordPress export file and confirm the import."|t('wp-importer') }}</p>
+
+    <div class="alert">
+        <h3>{{ "Import Summary"|t('wp-importer') }}</h3>
+        <ul>
+            <li><strong>{{ "Posts:"|t('wp-importer') }}</strong> {{ preparedData.posts|length }}</li>
+            <li><strong>{{ "Authors:"|t('wp-importer') }}</strong> {{ preparedData.authors|length }}</li>
+            <li><strong>{{ "Categories:"|t('wp-importer') }}</strong> {{ preparedData.categories|length }}</li>
+            <li><strong>{{ "Tags:"|t('wp-importer') }}</strong> {{ preparedData.tags|length }}</li>
+            <li><strong>{{ "Attachments:"|t('wp-importer') }}</strong> {{ preparedData.attachments|length }}</li>
+        </ul>
+    </div>
+
+    {% if preparedData.posts|length > 0 %}
+        <h2>{{ "Posts Preview"|t('wp-importer') }}</h2>
+        <div class="tableview">
+            <table class="data">
+                <thead>
+                    <tr>
+                        <th>{{ "Title"|t('wp-importer') }}</th>
+                        <th>{{ "Author"|t('wp-importer') }}</th>
+                        <th>{{ "Date"|t('wp-importer') }}</th>
+                        <th>{{ "Categories"|t('wp-importer') }}</th>
+                        <th>{{ "Tags"|t('wp-importer') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for post in preparedData.posts|slice(0, 10) %}
+                        <tr>
+                            <td>{{ post.title }}</td>
+                            <td>{{ post.author }}</td>
+                            <td>{{ post.date|date('Y-m-d') }}</td>
+                            <td>
+                                {% for category in post.categories %}
+                                    <span class="status enabled">{{ category.name }}</span>
+                                {% endfor %}
+                            </td>
+                            <td>
+                                {% for tag in post.tags %}
+                                    <span class="status">{{ tag.name }}</span>
+                                {% endfor %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    {% if preparedData.posts|length > 10 %}
+                        <tr>
+                            <td colspan="5">
+                                <em>{{ "... and {count} more posts"|t('wp-importer', { count: preparedData.posts|length - 10 }) }}</em>
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+
+    <form method="post" accept-charset="UTF-8" action="{{ actionUrl('wp-importer/import/start') }}">
+        {{ csrfInput() }}
+        {{ hiddenInput('filePath', filePath) }}
+        {{ hiddenInput('importSettings', importSettings|json_encode) }}
+
+        <div class="field">
+            <div class="heading">
+                <label for="asset-volume-id">{{ "Asset Volume"|t('wp-importer') }}</label>
+            </div>
+            <div class="input">
+                {{ forms.selectField({
+                    id: 'asset-volume-id',
+                    name: 'assetVolumeId',
+                    options: volumes,
+                    value: importSettings.assetVolumeId ?? '',
+                    required: true
+                }) }}
+            </div>
+        </div>
+
+        <div class="field">
+            {{ forms.checkboxField({
+                id: 'backup',
+                name: 'backup',
+                label: "Create backup before import"|t('wp-importer'),
+                instructions: "Create a database backup before importing content."|t('wp-importer'),
+                checked: importSettings.backup ?? true
+            }) }}
+        </div>
+
+        <div class="buttons">
+            <a href="{{ cpUrl('wp-importer/settings/import') }}" class="btn">{{ "Cancel"|t('wp-importer') }}</a>
+            <button type="submit" class="btn submit">{{ "Start Import"|t('wp-importer') }}</button>
+        </div>
+    </form>
+
+{% endblock %}

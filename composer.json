@@ -1,0 +1,48 @@
+{
+    "name": "jpwdesigns/craft-wp-importer",
+    "description": "A plugin to quickly set up a blog on Craft CMS websites and migrate content from WordPress.",
+    "type": "craft-plugin",
+    "version": "5.0.0",
+    "keywords": [
+        "craft",
+        "cms",
+        "craftcms",
+        "craft-plugin",
+        "blog",
+        "wordpress",
+        "import"
+    ],
+    "support": {
+        "docs": "https://github.com/jpwdesigns/craft-wp-importer",
+        "issues": "https://github.com/jpwdesigns/craft-wp-importer/issues"
+    },
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "JPW Designs",
+            "homepage": "https://jpwdesigns.com"
+        }
+    ],
+    "require": {
+        "php": ">=8.2",
+        "craftcms/cms": "^5.0.0"
+    },
+    "require-dev": {
+        "craftcms/ecs": "dev-main",
+        "craftcms/phpstan": "dev-main"
+    },
+    "autoload": {
+        "psr-4": {
+            "jpwdesigns\\wpimporter\\": "src/"
+        }
+    },
+    "extra": {
+        "name": "WP Importer",
+        "handle": "wp-importer",
+        "developer": "JPW Designs",
+        "developerUrl": "https://jpwdesigns.com",
+        "documentationUrl": "https://github.com/jpwdesigns/craft-wp-importer",
+        "changelogUrl": "https://raw.githubusercontent.com/jpwdesigns/craft-wp-importer/main/CHANGELOG.md",
+        "class": "jpwdesigns\\wpimporter\\WpImporter"
+    }
+}

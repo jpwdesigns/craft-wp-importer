@@ -1,0 +1,147 @@
+{#
+ # Blog entry template
+ # Gets loaded whenever a blog entry's URL is requested
+ #}
+
+{% extends wpImporter.getSettings().layout ?: "_layout" %}
+
+{% block content %}
+    <article class="blog-entry">
+        <header>
+            <h1>{{ entry.title }}</h1>
+            
+            <div class="entry-meta">
+                <time datetime="{{ entry.postDate|date('c') }}">
+                    {{ entry.postDate|date('F j, Y') }}
+                </time>
+                
+                {% if entry.author %}
+                    <span class="author">
+                        {{ "by"|t }} 
+                        <a href="{{ siteUrl('blog/author/' ~ entry.author.username) }}">
+                            {{ entry.author.fullName ?: entry.author.username }}
+                        </a>
+                    </span>
+                {% endif %}
+                
+                {% if entry.instaBlogCategories|length %}
+                    <span class="categories">
+                        {{ "in"|t }}
+                        {% for category in entry.instaBlogCategories %}
+                            <a href="{{ category.url }}">{{ category.title }}</a>{% if not loop.last %}, {% endif %}
+                        {% endfor %}
+                    </span>
+                {% endif %}
+            </div>
+        </header>
+
+        {% if entry.instaBlogImage|length %}
+            <div class="featured-image">
+                {% set image = entry.instaBlogImage.one() %}
+                <img src="{{ image.url }}" alt="{{ image.title ?: entry.title }}" />
+            </div>
+        {% endif %}
+
+        <div class="entry-content">
+            {{ entry.instaBlogBody }}
+        </div>
+
+        {% if entry.instaBlogTags|length %}
+            <footer class="entry-footer">
+                <div class="tags">
+                    <strong>{{ "Tags:"|t }}</strong>
+                    {% for tag in entry.instaBlogTags %}
+                        <a href="{{ siteUrl('blog/tag/' ~ tag.slug) }}" class="tag">{{ tag.title }}</a>
+                    {% endfor %}
+                </div>
+            </footer>
+        {% endif %}
+
+        {% set settings = wpImporter.getSettings() %}
+        {% if settings.disqus %}
+            <div class="comments">
+                <div id="disqus_thread"></div>
+                <script>
+                    var disqus_config = function () {
+                        this.page.url = "{{ entry.url }}";
+                        this.page.identifier = "{{ entry.id }}";
+                    };
+                    (function() {
+                        var d = document, s = d.createElement('script');
+                        s.src = 'https://{{ settings.disqus }}.disqus.com/embed.js';
+                        s.setAttribute('data-timestamp', +new Date());
+                        (d.head || d.body).appendChild(s);
+                    })();
+                </script>
+            </div>
+        {% endif %}
+    </article>
+
+    {# Social sharing #}
+    <div class="social-sharing">
+        <h3>{{ "Share this post"|t }}</h3>
+        <a href="https://twitter.com/intent/tweet?url={{ entry.url|url_encode }}&text={{ entry.title|url_encode }}" target="_blank">
+            {{ "Share on Twitter"|t }}
+        </a>
+        <a href="https://www.facebook.com/sharer/sharer.php?u={{ entry.url|url_encode }}" target="_blank">
+            {{ "Share on Facebook"|t }}
+        </a>
+        <a href="https://www.linkedin.com/sharing/share-offsite/?url={{ entry.url|url_encode }}" target="_blank">
+            {{ "Share on LinkedIn"|t }}
+        </a>
+    </div>
+
+    {# Navigation to other posts #}
+    {% set prevEntry = craft.entries()
+        .section('instaBlog')
+        .postDate('< ' ~ entry.postDate|date('Y-m-d H:i:s'))
+        .orderBy('postDate desc')
+        .one() %}
+    
+    {% set nextEntry = craft.entries()
+        .section('instaBlog')
+        .postDate('> ' ~ entry.postDate|date('Y-m-d H:i:s'))
+        .orderBy('postDate asc')
+        .one() %}
+
+    {% if prevEntry or nextEntry %}
+        <nav class="entry-navigation">
+            {% if prevEntry %}
+                <a href="{{ prevEntry.url }}" class="prev-entry">
+                    ← {{ prevEntry.title }}
+                </a>
+            {% endif %}
+            
+            {% if nextEntry %}
+                <a href="{{ nextEntry.url }}" class="next-entry">
+                    {{ nextEntry.title }} →
+                </a>
+            {% endif %}
+        </nav>
+    {% endif %}
+{% endblock %}
+
+{# SEO and social meta tags #}
+{% block head %}
+    <meta property="og:title" content="{{ entry.title }}" />
+    <meta property="og:description" content="{{ wpImporter.truncate(entry.instaBlogBody|striptags, 160) }}" />
+    <meta property="og:url" content="{{ entry.url }}" />
+    <meta property="og:type" content="article" />
+    
+    {% if entry.instaBlogImage|length %}
+        {% set image = entry.instaBlogImage.one() %}
+        <meta property="og:image" content="{{ image.url }}" />
+    {% endif %}
+    
+    {% set settings = wpImporter.getSettings() %}
+    {% if settings.facebook %}
+        <meta property="article:author" content="{{ settings.facebook }}" />
+    {% endif %}
+    
+    {% if settings.twitter %}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:site" content="{{ settings.twitter }}" />
+    {% endif %}
+    
+    <meta name="description" content="{{ wpImporter.truncate(entry.instaBlogBody|striptags, 160) }}" />
+{% endblock %}

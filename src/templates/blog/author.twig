@@ -1,0 +1,166 @@
+{#
+ # Blog author template
+ # Gets loaded for author URLs like /blog/author/john-doe
+ #}
+
+{% extends wpImporter.getSettings().layout ?: "_layout" %}
+
+{% set authorUsername = craft.app.request.segments|last %}
+{% set author = craft.users()
+    .username(authorUsername)
+    .one() %}
+
+{% block content %}
+    <div class="blog-author">
+        {% if author %}
+            <header class="author-header">
+                <h1>{{ "Posts by {author}"|t({ author: author.fullName ?: author.username }) }}</h1>
+                
+                <div class="author-info">
+                    {% if author.photo %}
+                        <div class="author-photo">
+                            <img src="{{ author.photo.url }}" alt="{{ author.fullName ?: author.username }}" />
+                        </div>
+                    {% endif %}
+                    
+                    <div class="author-details">
+                        {% if author.fullName %}
+                            <h2>{{ author.fullName }}</h2>
+                        {% endif %}
+                        
+                        {% if author.instaBlogTwitter or author.instaBlogFacebook or author.instaBlogLinkedin %}
+                            <div class="author-social">
+                                {% if author.instaBlogTwitter %}
+                                    <a href="https://twitter.com/{{ author.instaBlogTwitter|replace('@', '') }}" target="_blank">Twitter</a>
+                                {% endif %}
+                                {% if author.instaBlogFacebook %}
+                                    <a href="{{ author.instaBlogFacebook }}" target="_blank">Facebook</a>
+                                {% endif %}
+                                {% if author.instaBlogLinkedin %}
+                                    <a href="{{ author.instaBlogLinkedin }}" target="_blank">LinkedIn</a>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </header>
+
+            {# Get entries by this author #}
+            {% paginate craft.entries()
+                .section('instaBlog')
+                .authorId(author.id)
+                .orderBy('postDate desc')
+                .limit(10) as pageInfo, entries %}
+
+            {% if entries|length %}
+                <div class="author-stats">
+                    <p>{{ "{count} posts by this author"|t({ count: entries|length }) }}</p>
+                </div>
+
+                <div class="blog-entries">
+                    {% for entry in entries %}
+                        <article class="blog-entry-summary">
+                            <header>
+                                <h2>
+                                    <a href="{{ entry.url }}">{{ entry.title }}</a>
+                                </h2>
+                                
+                                <div class="entry-meta">
+                                    <time datetime="{{ entry.postDate|date('c') }}">
+                                        {{ entry.postDate|date('F j, Y') }}
+                                    </time>
+                                    
+                                    {% if entry.instaBlogCategories|length %}
+                                        <span class="categories">
+                                            {{ "in"|t }}
+                                            {% for category in entry.instaBlogCategories %}
+                                                <a href="{{ category.url }}">{{ category.title }}</a>{% if not loop.last %}, {% endif %}
+                                            {% endfor %}
+                                        </span>
+                                    {% endif %}
+                                </div>
+                            </header>
+
+                            {% if entry.instaBlogImage|length %}
+                                <div class="featured-image">
+                                    {% set image = entry.instaBlogImage.one() %}
+                                    <a href="{{ entry.url }}">
+                                        <img src="{{ image.url }}" alt="{{ image.title ?: entry.title }}" />
+                                    </a>
+                                </div>
+                            {% endif %}
+
+                            <div class="entry-excerpt">
+                                {{ wpImporter.truncate(entry.instaBlogBody|striptags, 300) }}
+                            </div>
+
+                            <footer>
+                                <a href="{{ entry.url }}" class="read-more">
+                                    {{ "Read more"|t }} →
+                                </a>
+                                
+                                {% if entry.instaBlogTags|length %}
+                                    <div class="tags">
+                                        {% for tag in entry.instaBlogTags %}
+                                            <a href="{{ siteUrl('blog/tag/' ~ tag.slug) }}" class="tag">{{ tag.title }}</a>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </footer>
+                        </article>
+                    {% endfor %}
+                </div>
+
+                {# Pagination #}
+                {% if pageInfo.totalPages > 1 %}
+                    <nav class="pagination">
+                        {% if pageInfo.prevUrl %}
+                            <a href="{{ pageInfo.prevUrl }}" class="prev">{{ "Previous"|t }}</a>
+                        {% endif %}
+
+                        <span class="page-info">
+                            {{ "Page {current} of {total}"|t({
+                                current: pageInfo.currentPage,
+                                total: pageInfo.totalPages
+                            }) }}
+                        </span>
+
+                        {% if pageInfo.nextUrl %}
+                            <a href="{{ pageInfo.nextUrl }}" class="next">{{ "Next"|t }}</a>
+                        {% endif %}
+                    </nav>
+                {% endif %}
+            {% else %}
+                <div class="no-entries">
+                    <p>{{ "This author hasn't published any posts yet."|t }}</p>
+                    <a href="{{ siteUrl('blog') }}">{{ "← Back to blog"|t }}</a>
+                </div>
+            {% endif %}
+        {% else %}
+            <div class="not-found">
+                <h1>{{ "Author not found"|t }}</h1>
+                <p>{{ "The requested author could not be found."|t }}</p>
+                <a href="{{ siteUrl('blog') }}">{{ "← Back to blog"|t }}</a>
+            </div>
+        {% endif %}
+
+        <nav class="author-navigation">
+            <a href="{{ siteUrl('blog') }}">{{ "← All Posts"|t }}</a>
+        </nav>
+    </div>
+{% endblock %}
+
+{% block head %}
+    {% if author %}
+        <meta property="og:title" content="{{ "Posts by {author}"|t({ author: author.fullName ?: author.username }) }}" />
+        <meta property="og:description" content="{{ "Browse posts by {author}"|t({ author: author.fullName ?: author.username }) }}" />
+        <meta property="og:url" content="{{ siteUrl('blog/author/' ~ author.username) }}" />
+        <meta property="og:type" content="profile" />
+        
+        {% if author.photo %}
+            <meta property="og:image" content="{{ author.photo.url }}" />
+        {% endif %}
+        
+        <meta name="description" content="{{ "Browse posts by {author}"|t({ author: author.fullName ?: author.username }) }}" />
+    {% endif %}
+{% endblock %}

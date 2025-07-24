@@ -1,0 +1,113 @@
+{#
+ # Blog category template
+ # Gets loaded for category URLs like /blog/category/news
+ #}
+
+{% extends wpImporter.getSettings().layout ?: "_layout" %}
+
+{% block content %}
+    <div class="blog-category">
+        <header class="page-header">
+            <h1>{{ "Posts in {category}"|t({ category: category.title }) }}</h1>
+            
+            {% if category.instaBlogBody %}
+                <div class="category-description">
+                    {{ category.instaBlogBody }}
+                </div>
+            {% endif %}
+        </header>
+
+        {# Get entries in this category #}
+        {% paginate craft.entries()
+            .section('instaBlog')
+            .relatedTo(category)
+            .orderBy('postDate desc')
+            .limit(10) as pageInfo, entries %}
+
+        {% if entries|length %}
+            <div class="blog-entries">
+                {% for entry in entries %}
+                    <article class="blog-entry-summary">
+                        <header>
+                            <h2>
+                                <a href="{{ entry.url }}">{{ entry.title }}</a>
+                            </h2>
+                            
+                            <div class="entry-meta">
+                                <time datetime="{{ entry.postDate|date('c') }}">
+                                    {{ entry.postDate|date('F j, Y') }}
+                                </time>
+                                
+                                {% if entry.author %}
+                                    <span class="author">
+                                        {{ "by"|t }} 
+                                        <a href="{{ siteUrl('blog/author/' ~ entry.author.username) }}">
+                                            {{ entry.author.fullName ?: entry.author.username }}
+                                        </a>
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </header>
+
+                        {% if entry.instaBlogImage|length %}
+                            <div class="featured-image">
+                                {% set image = entry.instaBlogImage.one() %}
+                                <a href="{{ entry.url }}">
+                                    <img src="{{ image.url }}" alt="{{ image.title ?: entry.title }}" />
+                                </a>
+                            </div>
+                        {% endif %}
+
+                        <div class="entry-excerpt">
+                            {{ wpImporter.truncate(entry.instaBlogBody|striptags, 300) }}
+                        </div>
+
+                        <footer>
+                            <a href="{{ entry.url }}" class="read-more">
+                                {{ "Read more"|t }} →
+                            </a>
+                        </footer>
+                    </article>
+                {% endfor %}
+            </div>
+
+            {# Pagination #}
+            {% if pageInfo.totalPages > 1 %}
+                <nav class="pagination">
+                    {% if pageInfo.prevUrl %}
+                        <a href="{{ pageInfo.prevUrl }}" class="prev">{{ "Previous"|t }}</a>
+                    {% endif %}
+
+                    <span class="page-info">
+                        {{ "Page {current} of {total}"|t({
+                            current: pageInfo.currentPage,
+                            total: pageInfo.totalPages
+                        }) }}
+                    </span>
+
+                    {% if pageInfo.nextUrl %}
+                        <a href="{{ pageInfo.nextUrl }}" class="next">{{ "Next"|t }}</a>
+                    {% endif %}
+                </nav>
+            {% endif %}
+        {% else %}
+            <div class="no-entries">
+                <p>{{ "No posts found in this category."|t }}</p>
+                <a href="{{ siteUrl('blog') }}">{{ "← Back to blog"|t }}</a>
+            </div>
+        {% endif %}
+
+        <nav class="category-navigation">
+            <a href="{{ siteUrl('blog') }}">{{ "← All Posts"|t }}</a>
+        </nav>
+    </div>
+{% endblock %}
+
+{% block head %}
+    <meta property="og:title" content="{{ category.title }}" />
+    <meta property="og:description" content="{{ "Posts in {category}"|t({ category: category.title }) }}" />
+    <meta property="og:url" content="{{ category.url }}" />
+    <meta property="og:type" content="website" />
+    
+    <meta name="description" content="{{ "Posts in {category}"|t({ category: category.title }) }}" />
+{% endblock %}

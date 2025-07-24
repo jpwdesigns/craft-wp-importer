@@ -1,0 +1,187 @@
+{#
+ # Blog index template
+ # Create this template at templates/blog/index.twig
+ #}
+
+{% extends wpImporter.getSettings().layout ?: "_layout" %}
+
+{% block content %}
+    <div class="blog-index">
+        <header class="blog-header">
+            <h1>{{ "Blog"|t }}</h1>
+        </header>
+
+        {# Pagination setup #}
+        {% paginate craft.entries()
+            .section('instaBlog')
+            .orderBy('postDate desc')
+            .limit(10) as pageInfo, entries %}
+
+        {% if entries|length %}
+            <div class="blog-entries">
+                {% for entry in entries %}
+                    <article class="blog-entry-summary">
+                        <header>
+                            <h2>
+                                <a href="{{ entry.url }}">{{ entry.title }}</a>
+                            </h2>
+                            
+                            <div class="entry-meta">
+                                <time datetime="{{ entry.postDate|date('c') }}">
+                                    {{ entry.postDate|date('F j, Y') }}
+                                </time>
+                                
+                                {% if entry.author %}
+                                    <span class="author">
+                                        {{ "by"|t }} 
+                                        <a href="{{ siteUrl('blog/author/' ~ entry.author.username) }}">
+                                            {{ entry.author.fullName ?: entry.author.username }}
+                                        </a>
+                                    </span>
+                                {% endif %}
+                                
+                                {% if entry.instaBlogCategories|length %}
+                                    <span class="categories">
+                                        {{ "in"|t }}
+                                        {% for category in entry.instaBlogCategories %}
+                                            <a href="{{ category.url }}">{{ category.title }}</a>{% if not loop.last %}, {% endif %}
+                                        {% endfor %}
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </header>
+
+                        {% if entry.instaBlogImage|length %}
+                            <div class="featured-image">
+                                {% set image = entry.instaBlogImage.one() %}
+                                <a href="{{ entry.url }}">
+                                    <img src="{{ image.url }}" alt="{{ image.title ?: entry.title }}" />
+                                </a>
+                            </div>
+                        {% endif %}
+
+                        <div class="entry-excerpt">
+                            {{ wpImporter.truncate(entry.instaBlogBody|striptags, 300) }}
+                        </div>
+
+                        <footer>
+                            <a href="{{ entry.url }}" class="read-more">
+                                {{ "Read more"|t }} →
+                            </a>
+                            
+                            {% if entry.instaBlogTags|length %}
+                                <div class="tags">
+                                    {% for tag in entry.instaBlogTags %}
+                                        <a href="{{ siteUrl('blog/tag/' ~ tag.slug) }}" class="tag">{{ tag.title }}</a>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </footer>
+                    </article>
+                {% endfor %}
+            </div>
+
+            {# Pagination #}
+            {% if pageInfo.totalPages > 1 %}
+                <nav class="pagination">
+                    {% if pageInfo.prevUrl %}
+                        <a href="{{ pageInfo.prevUrl }}" class="prev">{{ "Previous"|t }}</a>
+                    {% endif %}
+
+                    <span class="page-info">
+                        {{ "Page {current} of {total}"|t({
+                            current: pageInfo.currentPage,
+                            total: pageInfo.totalPages
+                        }) }}
+                    </span>
+
+                    {% if pageInfo.nextUrl %}
+                        <a href="{{ pageInfo.nextUrl }}" class="next">{{ "Next"|t }}</a>
+                    {% endif %}
+                </nav>
+            {% endif %}
+        {% else %}
+            <div class="no-entries">
+                <p>{{ "No blog posts found."|t }}</p>
+            </div>
+        {% endif %}
+
+        {# Sidebar #}
+        <aside class="blog-sidebar">
+            {# Categories #}
+            {% set categories = craft.categories()
+                .group('instaBlogCategories')
+                .orderBy('title asc')
+                .all() %}
+            
+            {% if categories|length %}
+                <div class="widget categories-widget">
+                    <h3>{{ "Categories"|t }}</h3>
+                    <ul>
+                        {% for category in categories %}
+                            <li>
+                                <a href="{{ category.url }}">{{ category.title }}</a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+
+            {# Tag cloud #}
+            {% set tags = craft.tags()
+                .group('instaBlogTags')
+                .orderBy('title asc')
+                .all() %}
+            
+            {% if tags|length %}
+                <div class="widget tags-widget">
+                    <h3>{{ "Tags"|t }}</h3>
+                    <div class="tag-cloud">
+                        {% for tag in tags %}
+                            <a href="{{ siteUrl('blog/tag/' ~ tag.slug) }}" class="tag">{{ tag.title }}</a>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+
+            {# Recent posts #}
+            {% set recentPosts = craft.entries()
+                .section('instaBlog')
+                .orderBy('postDate desc')
+                .limit(5)
+                .all() %}
+            
+            {% if recentPosts|length %}
+                <div class="widget recent-posts-widget">
+                    <h3>{{ "Recent Posts"|t }}</h3>
+                    <ul>
+                        {% for post in recentPosts %}
+                            <li>
+                                <a href="{{ post.url }}">{{ post.title }}</a>
+                                <time>{{ post.postDate|date('M j, Y') }}</time>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+
+            {# Search #}
+            <div class="widget search-widget">
+                <h3>{{ "Search"|t }}</h3>
+                <form action="{{ siteUrl('blog/search') }}" method="get">
+                    <input type="search" name="q" placeholder="{{ 'Search blog posts...'|t }}" value="{{ craft.app.request.getParam('q') }}">
+                    <button type="submit">{{ "Search"|t }}</button>
+                </form>
+            </div>
+        </aside>
+    </div>
+{% endblock %}
+
+{% block head %}
+    <meta property="og:title" content="{{ "Blog"|t }}" />
+    <meta property="og:description" content="{{ "Latest blog posts"|t }}" />
+    <meta property="og:url" content="{{ siteUrl('blog') }}" />
+    <meta property="og:type" content="website" />
+    
+    <meta name="description" content="{{ 'Latest blog posts'|t }}" />
+{% endblock %}
