@@ -9,12 +9,10 @@ use craft\fields\Assets;
 use craft\fields\Categories;
 use craft\fields\Tags;
 use craft\models\CategoryGroup;
-use craft\models\CategoryGroup_SiteSettings;
 use craft\models\FieldGroup;
 use craft\models\FieldLayout;
 use craft\models\FieldLayoutTab;
 use craft\models\Section;
-use craft\models\Section_SiteSettings;
 use craft\models\TagGroup;
 use craft\models\EntryType;
 use craft\ckeditor\Field as CKEditorField;
@@ -42,12 +40,13 @@ class InstallService extends Component
 
     private function createInstaBlogContent(): void
     {
-        $fieldsService = Craft::$app->fields;
-        $sectionsService = Craft::$app->sections;
-        $categoriesService = Craft::$app->categories;
-        $tagsService = Craft::$app->tags;
-        $usersService = Craft::$app->users;
-        $sitesService = Craft::$app->sites;
+        $fieldsService = Craft::$app->getFields();
+        $entriesService = Craft::$app->getEntries();
+        $sectionsService = Craft::$app->getSections();
+        $categoriesService = Craft::$app->getCategories();
+        $tagsService = Craft::$app->getTags();
+        $usersService = Craft::$app->getUsers();
+        $sitesService = Craft::$app->getSites();
 
         // Create InstaBlog field group
         $fieldGroup = new FieldGroup();
@@ -101,7 +100,7 @@ class InstallService extends Component
         // CKEditor configuration
         $field->configs = ['toolbar' => ['heading', '|', 'bold', 'italic', 'link', 'bulletedList', 'numberedList', 'blockQuote']];
         
-        if (!Craft::$app->fields->saveField($field)) {
+        if (!Craft::$app->getFields()->saveField($field)) {
             throw new \Exception('Could not save InstaBlog Body field');
         }
         
@@ -117,7 +116,7 @@ class InstallService extends Component
         $field->allowedKinds = ['image'];
         $field->limit = 1;
         
-        if (!Craft::$app->fields->saveField($field)) {
+        if (!Craft::$app->getFields()->saveField($field)) {
             throw new \Exception('Could not save Featured Image field');
         }
         
@@ -140,7 +139,7 @@ class InstallService extends Component
             $field->name = $name;
             $field->handle = $handle;
             
-            if (!Craft::$app->fields->saveField($field)) {
+            if (!Craft::$app->getFields()->saveField($field)) {
                 throw new \Exception("Could not save {$name} field");
             }
             
@@ -158,7 +157,7 @@ class InstallService extends Component
         $field->handle = 'instaBlogTags';
         $field->source = "taggroup:{$tagGroup->uid}";
         
-        if (!Craft::$app->fields->saveField($field)) {
+        if (!Craft::$app->getFields()->saveField($field)) {
             throw new \Exception('Could not save InstaBlog Tags field');
         }
         
@@ -174,13 +173,13 @@ class InstallService extends Component
 
         // Set up site settings
         $siteSettings = [];
-        foreach (Craft::$app->sites->getAllSites() as $site) {
-            $siteSettings[$site->id] = new CategoryGroup_SiteSettings([
+        foreach (Craft::$app->getSites()->getAllSites() as $site) {
+            $siteSettings[$site->id] = [
                 'siteId' => $site->id,
                 'hasUrls' => true,
                 'uriFormat' => 'blog/category/{slug}',
                 'template' => 'blog/category',
-            ]);
+            ];
         }
         $categoryGroup->setSiteSettings($siteSettings);
 
@@ -200,7 +199,7 @@ class InstallService extends Component
         $fieldLayout->setTabs([$tab]);
         $categoryGroup->setFieldLayout($fieldLayout);
 
-        if (!Craft::$app->categories->saveGroup($categoryGroup)) {
+        if (!Craft::$app->getCategories()->saveGroup($categoryGroup)) {
             throw new \Exception('Could not save InstaBlog category group');
         }
 
@@ -215,7 +214,7 @@ class InstallService extends Component
         $field->handle = 'instaBlogCategories';
         $field->source = "group:{$categoryGroup->uid}";
         
-        if (!Craft::$app->fields->saveField($field)) {
+        if (!Craft::$app->getFields()->saveField($field)) {
             throw new \Exception('Could not save InstaBlog Categories field');
         }
         
@@ -224,7 +223,7 @@ class InstallService extends Component
 
     private function updateUserFieldLayout(array $socialFields): void
     {
-        $fieldsService = Craft::$app->fields;
+        $fieldsService = Craft::$app->getFields();
         
         // Get current user field layout
         $layout = $fieldsService->getLayoutByType(\craft\elements\User::class);
@@ -265,18 +264,18 @@ class InstallService extends Component
 
         // Set up site settings  
         $siteSettings = [];
-        foreach (Craft::$app->sites->getAllSites() as $site) {
-            $siteSettings[$site->id] = new Section_SiteSettings([
+        foreach (Craft::$app->getSites()->getAllSites() as $site) {
+            $siteSettings[$site->id] = [
                 'siteId' => $site->id,
                 'enabledByDefault' => true,
                 'hasUrls' => true,
                 'uriFormat' => 'blog/{slug}',
                 'template' => 'blog/_entry',
-            ]);
+            ];
         }
         $section->setSiteSettings($siteSettings);
 
-        if (!Craft::$app->sections->saveSection($section)) {
+        if (!Craft::$app->getSections()->saveSection($section)) {
             throw new \Exception('Could not save InstaBlog section');
         }
 
@@ -307,7 +306,7 @@ class InstallService extends Component
         $fieldLayout->setTabs([$tab]);
         $entryType->setFieldLayout($fieldLayout);
 
-        if (!Craft::$app->sections->saveEntryType($entryType)) {
+        if (!Craft::$app->getSections()->saveEntryType($entryType)) {
             throw new \Exception('Could not save InstaBlog entry type');
         }
     }
@@ -328,14 +327,14 @@ class InstallService extends Component
             '<p>Completely synergize resource taxing relationships via premier niche markets. Professionally cultivate one-to-one customer service with robust ideas. Dynamically innovate resource-leveling customer service for state of the art customer service.</p>'
         );
 
-        if (!Craft::$app->elements->saveElement($entry)) {
+        if (!Craft::$app->getElements()->saveElement($entry)) {
             throw new \Exception('Could not save sample InstaBlog entry');
         }
     }
 
     private function createRoutes(): void
     {
-        $routesService = Craft::$app->routes;
+        $routesService = Craft::$app->getRoutes();
         
         // Tag route
         $routesService->saveRoute([
